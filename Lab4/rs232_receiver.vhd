@@ -15,11 +15,14 @@ end rs232_receiver;
 architecture Behavioral of rs232_receiver is
     signal counter : INTEGER := 0;
     signal prev_clk : STD_LOGIC := '0';
-    constant DIVIDER : INTEGER := 10417;
+    signal DIVIDER : INTEGER := 10417;
     signal synchronized_clock : STD_LOGIC := '0';
     signal reading_input: STD_LOGIC := '0';
     signal read_bits_counter: INTEGER := 0;
     signal recieved_bits: STD_LOGIC_VECTOR (7 downto 0);
+    signal transmission: STD_LOGIC := '0';
+    signal temp_rxd_i_in: STD_LOGIC := '0';
+    signal temp_rxd_i_out: STD_LOGIC := '0';
     
     
 function digit_to_segment(input : in STD_LOGIC_VECTOR(3 downto 0)) return STD_LOGIC_VECTOR is
@@ -46,41 +49,52 @@ function digit_to_segment(input : in STD_LOGIC_VECTOR(3 downto 0)) return STD_LO
     end function;
 
 begin
+
     synchronizer: process (clk_i) 
     begin
         if rising_edge(clk_i) then
-            counter <= counter + 1;
-            if counter >= DIVIDER then
-                counter <= 0;
-                synchronized_clock <= '1';
-            else
-                synchronized_clock <= '0';
+            if transmission = '1' then
+                counter <= counter + 1;
+                if read_bits_counter = 0 then
+                    DIVIDER <= 15626;
+                else
+                    DIVIDER <= 10417;
+                end if;
+                if counter >= DIVIDER then
+                    counter <= 0;
+                    synchronized_clock <= '1';
+                else
+                    synchronized_clock <= '0';
+                end if;
             end if;
         end if;
     end process;
-                
+
+-- synchronizacja RXD_i (przerzutnik synchronizuj?cy)
+-- próbkowanie do momentu bitu startu
     read_bits: process (clk_i, rst_i)
     begin
         if rst_i = '1' then
-            reading_input <= '0';
+            transmission <= '0';
             prev_clk <= '0';
+            digit_i(15 downto 0) <= "0000000000000000";
         elsif rising_edge(clk_i) then
-            if synchronized_clock = '1' then  
-                if reading_input = '0' then
-                    if RXD_i = '0' then
-                        reading_input <= '1';
-                        read_bits_counter <= 0;
-                    end if;
-                elsif reading_input = '1' then
+            temp_rxd_i_in <= RXD_i;
+            temp_rxd_i_out <= temp_rxd_i_in;
+            
+            if transmission = '0' and temp_rxd_i_out = '0' then
+                read_bits_counter <= 0;
+                transmission <= '1';
+            elsif synchronized_clock = '1' then  
                     read_bits_counter <= read_bits_counter + 1;
                     if read_bits_counter >= 8 then
-                        reading_input <= '0';
                         digit_i(7 downto 0) <= digit_to_segment(recieved_bits(3 downto 0));
                         digit_i(15 downto 8) <= digit_to_segment(recieved_bits(7 downto 4));
+                        transmission <= '0';
                     else
-                        recieved_bits(read_bits_counter) <= RXD_i;
+                        recieved_bits(read_bits_counter) <= temp_rxd_i_out;
                     end if;
-                end if;
+               -- end if;
             end if;
             prev_clk <= synchronized_clock;  -- Aktualizacja poprzedniego stanu zegara
         end if;

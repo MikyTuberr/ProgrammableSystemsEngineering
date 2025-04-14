@@ -31,7 +31,7 @@ architecture Behavioral of tb_top is
 
 begin
 
-    -- Instancja modułu top
+    -- Instancja modu?u top
     dut: top
         port map (
             clk_i => clk_i,
@@ -60,10 +60,9 @@ begin
         wait for 100 ns;  -- Reset przez 100 ns
         rst_i <= '0';
 
-        -- PRZERWA NA STABILIZACJĘ
         wait for 1 ms;
 
-        --(10010011) 0xCA 0x93
+        --(01010011) 0x93
         RXD_i <= '1'; wait for bit_period; -- Stan spoczynkowy (idle)
         RXD_i <= '0'; wait for bit_period; -- Start bit
         RXD_i <= '1'; wait for bit_period; -- Bit 0
@@ -72,33 +71,13 @@ begin
         RXD_i <= '0'; wait for bit_period; -- Bit 3
         RXD_i <= '1'; wait for bit_period; -- Bit 4
         RXD_i <= '0'; wait for bit_period; -- Bit 5
-        RXD_i <= '0'; wait for bit_period; -- Bit 6
-        RXD_i <= '1'; wait for bit_period; -- Bit 7
-        RXD_i <= '1'; wait for bit_period; -- Stop bit
-
-        -- Przerwa między transmisjami
-        wait for 3 ms;
-
-        -- WYSŁANIE KOLEJNEGO BAJTU 'A' (00100001) 0x21
-        RXD_i <= '1'; wait for bit_period; -- Idle
-        RXD_i <= '0'; wait for bit_period; -- Start bit
-        RXD_i <= '1'; wait for bit_period; -- Bit 0
-        RXD_i <= '0'; wait for bit_period; -- Bit 1
-        RXD_i <= '0'; wait for bit_period; -- Bit 2
-        RXD_i <= '0'; wait for bit_period; -- Bit 3
-        RXD_i <= '0'; wait for bit_period; -- Bit 4
-        RXD_i <= '1'; wait for bit_period; -- Bit 5
-        RXD_i <= '0'; wait for bit_period; -- Bit 6
+        RXD_i <= '1'; wait for bit_period; -- Bit 6
         RXD_i <= '0'; wait for bit_period; -- Bit 7
         RXD_i <= '1'; wait for bit_period; -- Stop bit
-        
-        -- zmniejszenie o 4%
-        
+
+        wait for 10 ms;
         bit_period := 100.0032 us;
         
-        wait for 5 ms;
-
-        --(10010011) 0xCA 0x93
         RXD_i <= '1'; wait for bit_period; -- Stan spoczynkowy (idle)
         RXD_i <= '0'; wait for bit_period; -- Start bit
         RXD_i <= '1'; wait for bit_period; -- Bit 0
@@ -107,31 +86,13 @@ begin
         RXD_i <= '0'; wait for bit_period; -- Bit 3
         RXD_i <= '1'; wait for bit_period; -- Bit 4
         RXD_i <= '0'; wait for bit_period; -- Bit 5
-        RXD_i <= '0'; wait for bit_period; -- Bit 6
-        RXD_i <= '1'; wait for bit_period; -- Bit 7
-        RXD_i <= '1'; wait for bit_period; -- Stop bit
-
-        -- Przerwa między transmisjami
-        wait for 3 ms;
-
-        -- WYSŁANIE KOLEJNEGO BAJTU 'A' (00100001) 0x21
-        RXD_i <= '1'; wait for bit_period; -- Idle
-        RXD_i <= '0'; wait for bit_period; -- Start bit
-        RXD_i <= '1'; wait for bit_period; -- Bit 0
-        RXD_i <= '0'; wait for bit_period; -- Bit 1
-        RXD_i <= '0'; wait for bit_period; -- Bit 2
-        RXD_i <= '0'; wait for bit_period; -- Bit 3
-        RXD_i <= '0'; wait for bit_period; -- Bit 4
-        RXD_i <= '1'; wait for bit_period; -- Bit 5
-        RXD_i <= '0'; wait for bit_period; -- Bit 6
+        RXD_i <= '1'; wait for bit_period; -- Bit 6
         RXD_i <= '0'; wait for bit_period; -- Bit 7
         RXD_i <= '1'; wait for bit_period; -- Stop bit
         
+        wait for 10 ms;
         bit_period := 108.3368 us;
         
-        wait for 5 ms;
-
-        --(10010011) 0xCA 0x93
         RXD_i <= '1'; wait for bit_period; -- Stan spoczynkowy (idle)
         RXD_i <= '0'; wait for bit_period; -- Start bit
         RXD_i <= '1'; wait for bit_period; -- Bit 0
@@ -140,28 +101,10 @@ begin
         RXD_i <= '0'; wait for bit_period; -- Bit 3
         RXD_i <= '1'; wait for bit_period; -- Bit 4
         RXD_i <= '0'; wait for bit_period; -- Bit 5
-        RXD_i <= '0'; wait for bit_period; -- Bit 6
-        RXD_i <= '1'; wait for bit_period; -- Bit 7
-        RXD_i <= '1'; wait for bit_period; -- Stop bit
-
-        -- Przerwa między transmisjami
-        wait for 3 ms;
-
-        -- WYSŁANIE KOLEJNEGO BAJTU 'A' (00100001) 0x21
-        RXD_i <= '1'; wait for bit_period; -- Idle
-        RXD_i <= '0'; wait for bit_period; -- Start bit
-        RXD_i <= '1'; wait for bit_period; -- Bit 0
-        RXD_i <= '0'; wait for bit_period; -- Bit 1
-        RXD_i <= '0'; wait for bit_period; -- Bit 2
-        RXD_i <= '0'; wait for bit_period; -- Bit 3
-        RXD_i <= '0'; wait for bit_period; -- Bit 4
-        RXD_i <= '1'; wait for bit_period; -- Bit 5
-        RXD_i <= '0'; wait for bit_period; -- Bit 6
+        RXD_i <= '1'; wait for bit_period; -- Bit 6
         RXD_i <= '0'; wait for bit_period; -- Bit 7
         RXD_i <= '1'; wait for bit_period; -- Stop bit
-        
 
-        -- KONIEC SYMULACJI
         wait for 10 ms;
         assert false report "Koniec symulacji" severity failure;
     end process;
