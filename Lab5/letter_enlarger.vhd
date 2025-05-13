@@ -37,7 +37,7 @@ Port (
     fifo_data : in STD_LOGIC_VECTOR (7 downto 0);
     fifo_empty : in STD_LOGIC;
     fifo_full : in STD_LOGIC;
-    rom_data : in STD_LOGIC_VECTOR (7 downto 0);
+    rom_data : in STD_LOGIC_VECTOR (0 to 7);
     fifo_rd_en_o : out STD_LOGIC;
     led_o : out STD_LOGIC;
     rom_addr_o : out STD_LOGIC_VECTOR (11 downto 0);
@@ -53,22 +53,25 @@ architecture Behavioral of letter_enlarger is
     signal array_index : INTEGER := 0;
     signal array_size : INTEGER := 0;
     
-    type state_type is (IDLE, WAIT1, READ_FIFO, SENDING_ROM_SIGNAL, WAIT_ROM, SEND_TO_TRANSMITTER);
+    type state_type is (IDLE, WAIT1, WAIT2, READ_FIFO, SENDING_ROM_SIGNAL, WAIT_ROM, SEND_TO_TRANSMITTER);
     signal state : state_type := IDLE;
     
     signal verse_counter : INTEGER := 0;
     signal verse_index : INTEGER := 0;
     
     signal counter : INTEGER := 0;
-    signal DIVIDER : INTEGER := 10417;
+   -- signal DIVIDER_TIMES_EIGHT : INTEGER := 83336;
+    signal DIVIDER_TIMES_EIGHT : INTEGER := 104170;
     signal synchronized_clock : STD_LOGIC := '0';
     
     signal STAR_SIGN : std_logic_vector (7 downto 0) := x"2a";
     signal SPACE_SIGN : std_logic_vector (7 downto 0) := x"20";
     signal CR_SIGN : std_logic_vector (7 downto 0) := x"0D";
     signal LF_SIGN : std_logic_vector (7 downto 0) := x"0A";
+    signal STOP_SIGN : std_logic_vector (7 downto 0) := x"80";
 
     signal cr_sent : std_logic := '0';
+    signal lf_sent : std_logic := '0';
     
 begin
 
@@ -76,7 +79,7 @@ begin
     begin
         if rising_edge(clk_i) then
             counter <= counter + 1;
-            if counter >= DIVIDER then
+            if counter >= DIVIDER_TIMES_EIGHT then
                 counter <= 0;
                 synchronized_clock <= '1';
             else
@@ -89,9 +92,9 @@ begin
     begin
         if rising_edge (clk_i) then
             if fifo_full = '1' then
-                led_o <= '0';
-            elsif fifo_full = '0' then
                 led_o <= '1';
+            elsif fifo_full = '0' then
+                led_o <= '0';
             end if;
         end if;
     end process;
@@ -115,21 +118,25 @@ begin
                 if fifo_empty = '1' then
                     fifo_rd_en_o <= '0';
                     state <= IDLE;
-                end if;
-            
-                char_array(array_index) <= fifo_data;
-                array_index <= array_index + 1;
-                array_size <= array_size + 1;
                 
-                if fifo_data = CR_SIGN then
-                    fifo_rd_en_o <= '0';
-                    array_index <= 0;
-                    state <= SENDING_ROM_SIGNAL;
-                elsif array_size = 17 then
-                    char_array(18) <= CR_SIGN;
-                    fifo_rd_en_o <= '0';
-                    array_index <= 0;
-                    state <= SENDING_ROM_SIGNAL;
+                elsif fifo_empty = '0' then
+            
+                    char_array(array_index) <= fifo_data;
+                    array_index <= array_index + 1;
+                    array_size <= array_size + 1;
+                    
+                    if fifo_data = CR_SIGN then
+                        fifo_rd_en_o <= '0';
+                        array_index <= 0;
+                        state <= SENDING_ROM_SIGNAL;
+                    elsif array_size = 17 then
+                        char_array(18) <= CR_SIGN;
+                        fifo_rd_en_o <= '0';
+                        array_index <= 0;
+                        state <= SENDING_ROM_SIGNAL;
+                        array_size <= 19;
+                    end if;
+                
                 end if;
             
             when SENDING_ROM_SIGNAL =>
@@ -152,10 +159,16 @@ begin
                             enlarged_char_o <= CR_SIGN;
                             cr_sent <= '1';
                         elsif cr_sent = '1' then
-                            enlarged_char_o <= LF_SIGN;
-                            cr_sent <= '0';
-                            -- signalize the end of the letter
-                            verse_index <= 8;
+                            if lf_sent = '0' then
+                                enlarged_char_o <= LF_SIGN;
+                                lf_sent <= '1';
+                            elsif lf_sent = '1' then
+                                -- signalize the end of the letter
+                                enlarged_char_o <= STOP_SIGN;
+                                verse_index <= 8;
+                                lf_sent <= '0';
+                                cr_sent <= '0';
+                            end if;
                         end if;
                     -- ascii code less than 32
                     elsif char_array(array_index)(7) = '0' and char_array(array_index)(6) = '0' and char_array(array_index)(5) = '0' then
@@ -181,7 +194,7 @@ begin
                         verse_index <= 0;
                         state <= SENDING_ROM_SIGNAL;
                         -- if all letters done go down one verse
-                        if array_index = array_size then
+                        if array_index = (array_size - 1) then
                             array_index <= 0;
                             verse_counter <= verse_counter + 1;
                             -- finished all the verses and all the letters
@@ -191,6 +204,7 @@ begin
                                 verse_counter <= 0;
                                 verse_index <= 0;
                                 state <= IDLE;
+                                enlarged_char_o <= "10000000";
                             end if;
                         else
                             array_index <= array_index + 1;

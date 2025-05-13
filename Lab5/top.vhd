@@ -51,7 +51,7 @@ architecture Behavioral of top is
       );
     END COMPONENT;
     
-    COMPONENT fifo_mem
+    COMPONENT fifo_generator_0
       PORT (
         clk : IN STD_LOGIC;
         din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -111,7 +111,7 @@ begin
         douta => rom_data_bus
       );
       
-     input_mem : fifo_mem
+     input_mem : fifo_generator_0
       PORT MAP (
         clk => clk_i,
         din => input_char_bus,

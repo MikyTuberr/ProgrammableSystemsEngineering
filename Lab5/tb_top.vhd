@@ -39,6 +39,8 @@ begin
         port map (
             clk_i => clk_i,
             RXD_i => RXD_i,
+            TXD_o => TXD_o,
+            ld0 => ld0,
             led7_an_o => led7_an_o,
             led7_seg_o => led7_seg_o
         );
@@ -59,18 +61,22 @@ begin
     begin
         wait for 1 ms;
 
+        
+        
         --(01010011) 0x93
+        
         RXD_i <= '1'; wait for bit_period; -- Stan spoczynkowy (idle)
         RXD_i <= '0'; wait for bit_period; -- Start bit
         RXD_i <= '1'; wait for bit_period; -- Bit 0
         RXD_i <= '1'; wait for bit_period; -- Bit 1
         RXD_i <= '0'; wait for bit_period; -- Bit 2
-        RXD_i <= '0'; wait for bit_period; -- Bit 3
-        RXD_i <= '1'; wait for bit_period; -- Bit 4
+        RXD_i <= '1'; wait for bit_period; -- Bit 3
+        RXD_i <= '0'; wait for bit_period; -- Bit 4
         RXD_i <= '0'; wait for bit_period; -- Bit 5
         RXD_i <= '1'; wait for bit_period; -- Bit 6
         RXD_i <= '0'; wait for bit_period; -- Bit 7
         RXD_i <= '1'; wait for bit_period; -- Stop bit
+        
         
                 -- Wysłanie znaku Enter (0x0D)
         RXD_i <= '1'; wait for bit_period; -- idle
@@ -86,7 +92,8 @@ begin
         RXD_i <= '1'; wait for bit_period; -- Stop bit
 
         wait for 10 ms;
-        assert false report "Koniec symulacji" severity failure;
+        -- assert false report "Koniec symulacji" severity failure;
+        wait;
     end process;
 
 end Behavioral;

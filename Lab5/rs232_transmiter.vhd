@@ -44,8 +44,8 @@ architecture Behavioral of rs232_transmiter is
     signal synchronised_clock_counter: INTEGER := 0;
     signal DIVIDER : INTEGER := 10417;
     signal transmission: STD_LOGIC := '0';
-    signal temp_char_in:  STD_LOGIC_VECTOR (7 downto 0);
-    signal temp_char_out:  STD_LOGIC_VECTOR (7 downto 0);
+    -- signal temp_char_in:  STD_LOGIC_VECTOR (7 downto 0);
+    signal character_to_send:  STD_LOGIC_VECTOR (7 downto 0);
 
 
 begin
@@ -54,10 +54,12 @@ begin
     begin
     if rising_edge (clk_i) then
         if transmission = '0' then
-            temp_char_in <= char_i;
-            temp_char_out <= temp_char_in;
+            --temp_char_in <= char_i;
+            --temp_char_out <= temp_char_in;
+            character_to_send <= char_i;
             
-            if temp_char_out(7) = '0' then
+            if char_i(7) = '0' then
+            
                 transmission <= '1';
                 sent_bits_counter <= 0;
                 synchronised_clock_counter <= 0;
@@ -65,13 +67,16 @@ begin
             end if;
         elsif transmission = '1' then
             synchronised_clock_counter <= synchronised_clock_counter + 1;
-            if synchronised_clock_counter = DIVIDER then
+            if synchronised_clock_counter >= DIVIDER then
+                synchronised_clock_counter <= 0;
                 sent_bits_counter <= sent_bits_counter + 1;
                 if sent_bits_counter = 8 then
                     TXD_o <= '1';
-                    transmission <= '0';
                 elsif sent_bits_counter <= 7 then
-                    TXD_o <= temp_char_out(sent_bits_counter);
+                    TXD_o <= character_to_send(sent_bits_counter);
+                    
+                elsif sent_bits_counter <= 10 then
+                    transmission <= '0';
                 end if;
                 
             end if;

@@ -21,8 +21,8 @@ architecture Behavioral of rs232_receiver is
     signal read_bits_counter: INTEGER := 0;
     signal recieved_bits: STD_LOGIC_VECTOR (7 downto 0);
     signal transmission: STD_LOGIC := '0';
-    signal temp_rxd_i_in: STD_LOGIC := '0';
-    signal temp_rxd_i_out: STD_LOGIC := '0';
+    signal temp_rxd_i_in: STD_LOGIC := '1';
+    signal temp_rxd_i_out: STD_LOGIC := '1';
     signal temp_wr_en : STD_LOGIC := '0';
     signal wr_en_counter : INTEGER := 0;
     
